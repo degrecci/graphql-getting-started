@@ -12,9 +12,34 @@ const schema = buildSchema(`
   type Query {
     quoteOfTheDay: String,
     random: Float!,
-    getDie(numSides: Int): RandomDie
+    getDie(numSides: Int): RandomDie,
+    getMessage(id: ID!): Message
+  }
+
+  input MessageInput {
+    content: String
+    author: String
+  }
+
+  type Message {
+    id: ID!
+    content: String
+    author: String
+  }
+
+  type Mutation {
+    createMessage(input: MessageInput): Message
+    updateMessage(id: ID!, input: MessageInput): Message
   }
 `);
+
+class Message {
+  constructor(id, { content, author }) {
+    this.id = id;
+    this.content = content;
+    this.author = author;
+  }
+}
 
 class RandomDie {
   constructor(numSides){
@@ -34,12 +59,35 @@ class RandomDie {
   }
 }
 
+let fakeDatabase = {}
+
 const root = {
   quoteOfTheDay: () => {
     return Math.random() < 0.5 ? 'Take it easy' : 'Salvation lies within';
   },
   random: () => Math.random(),
   getDie: ({ numSides }) => new RandomDie(numSides || 6),
+  getMessage: ({id}) => {
+    if (!fakeDatabase[id]) {
+      throw new Error(`no message exists with id ${id}`);
+    }
+
+    return new Message(id, fakeDatabase[id])
+  },
+  createMessage: ({ input }) => {
+    let id = require('crypto').randomBytes(10).toString('hex');
+
+    fakeDatabase[id] = input;
+    return new Message(id, input);
+  },
+  updateMessage: ({ id, input }) => {
+    if (!fakeDatabase[id]) {
+      throw new Error(`no message exists with id ${id}`);
+    }
+
+    fakeDatabase[id] = input;
+    return new Message(id, input);
+  }
 };
 
 const app = express();

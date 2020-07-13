@@ -1,8 +1,8 @@
 const fetch = require('node-fetch');
-const dice = 3;
-const sides = 10;
-const query = `query RollDice($dice: Int!, $sides: Int) {
-  rollDice(numDice: $dice, numSides: $sides)
+const query = `mutation UpdateMessage($id: ID!, $input: MessageInput) {
+  updateMessage(id: $id, input: $input) {
+    id
+  }
 }`;
 
 fetch('http://localhost:4000/graphql', {
@@ -13,7 +13,12 @@ fetch('http://localhost:4000/graphql', {
   },
   body: JSON.stringify({
     query,
-    variables: { dice, sides },
+    variables: {
+      id: "62295e8504959649b193",
+      input: {
+      author: "Neil Gaiman",
+      content: "Sandman",
+    } },
   })
 })
 .then(response => response.json())
